@@ -30,6 +30,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Anim Settings")
 	bool bIsDead = false;
 
+	UFUNCTION()
+	void AnimNotify_FootstepSound(class USoundBase* Source, class USoundAttenuation* Attenuation);
 
 private:
 	class ANetworkProjectCharacter* Player;

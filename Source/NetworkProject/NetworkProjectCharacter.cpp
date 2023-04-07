@@ -16,6 +16,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 #include "PlayerAnimInstance.h"
 #include "PlayerInfoWidget.h"
 #include "ServerGameInstance.h"
@@ -144,6 +145,44 @@ void ANetworkProjectCharacter::Tick(float DeltaSeconds)
 	{
 		DieProcess();
 	}
+}
+
+// 세션 종료 함수
+void ANetworkProjectCharacter::EndSession()
+{
+	// 세션 종료
+	if(HasAuthority())
+	{
+		for(TActorIterator<ANetworkProjectCharacter> itr(GetWorld()); itr; ++itr)
+		{
+			ANetworkProjectCharacter* player = *itr;
+			if(player != this)
+			{
+				player->ServerDestroyAllSessions();
+			}
+		}
+		ServerDestroyAllSessions();
+
+		FTimerHandle testHandle;
+		GetWorldTimerManager().SetTimer(testHandle, this, &ANetworkProjectCharacter::DestoryMySession, 1.f, false);
+	}
+	else
+	{
+		DestoryMySession();
+	}
+}
+
+void ANetworkProjectCharacter::MulticastDestroyAllSessions_Implementation()
+{
+	if(GetController() != nullptr && GetController()->IsLocalController())
+	{
+		DestoryMySession();
+	}
+}
+
+void ANetworkProjectCharacter::ServerDestroyAllSessions_Implementation()
+{
+	MulticastDestroyAllSessions();
 }
 
 void ANetworkProjectCharacter::ServerSetName_Implementation(const FString& Name)
@@ -285,17 +324,19 @@ void ANetworkProjectCharacter::DieProcess()
 		bUseControllerRotationYaw = false;
 		FollowCamera->PostProcessSettings.ColorSaturation = FVector4(0.f, 0.f, 0.f, 1);
 		ReleaseWeapon();
+		GetWorld()->GetFirstPlayerController()->SetShowMouseCursor(true);
 	}
 
-	if(HasAuthority())
-	{
-		FTimerHandle spectatorHandle;
-		GetWorldTimerManager().SetTimer(spectatorHandle, FTimerDelegate::CreateLambda([this]()->void
-			{
-				// Cast<ABattlePlayerController>(GetController())->Respawn(this);
-				ChangeSpectatorMode();
-			}), 3.0f, false);
-	}
+	// 관전자 모드 실행 부분
+	//if(HasAuthority())
+	//{
+	//	FTimerHandle spectatorHandle;
+	//	GetWorldTimerManager().SetTimer(spectatorHandle, FTimerDelegate::CreateLambda([this]()->void
+	//		{
+	//			// Cast<ABattlePlayerController>(GetController())->Respawn(this);
+	//			ChangeSpectatorMode();
+	//		}), 3.0f, false);
+	//}
 }
 
 // 관전자 모드로 변경하는 함수
@@ -475,6 +516,15 @@ void ANetworkProjectCharacter::ReleaseWeapon()
 	{
 		OwningWeapon->ServerReleaseWeapon(this);
 	}
+}
+
+void ANetworkProjectCharacter::DestoryMySession()
+{
+	GameInstance->SessionInterface->DestroySession(GameInstance->SessionID);
+
+	// 레벨을 다시 처음 레벨로 이동한다.
+	ABattlePlayerController* battlePlayerController = Cast<ABattlePlayerController>(GetController());
+	battlePlayerController->ClientTravel(FString("/Game/Maps/LoginMap"), ETravelType::TRAVEL_Absolute);
 }
 
 void ANetworkProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

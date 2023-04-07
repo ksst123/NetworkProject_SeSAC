@@ -6,6 +6,7 @@
 #include "KismetAnimationLibrary.h"
 #include "../NetworkProjectCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 void UPlayerAnimInstance::NativeBeginPlay()
@@ -53,4 +54,9 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AimAnglePitch = FMath::Clamp(deltaRotation.GetNormalized().Pitch, -45.f, 45.f);
 
 	bIsDead = Player->IsDead();
+}
+
+void UPlayerAnimInstance::AnimNotify_FootstepSound(USoundBase* Source, USoundAttenuation* Attenuation)
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), Source, Player->GetActorLocation(), 1, 1, 0, Attenuation);
 }

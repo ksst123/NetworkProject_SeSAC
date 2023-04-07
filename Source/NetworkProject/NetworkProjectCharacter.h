@@ -92,6 +92,15 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void ServerSetName(const FString& Name);
 
+	UFUNCTION()
+	void EndSession();
+
+	UFUNCTION(Server, Unreliable)
+	void ServerDestroyAllSessions();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastDestroyAllSessions();
+
 	UPROPERTY(EditAnywhere, Category="My Settings")
 	TSubclassOf<class ABulletActor> BulletFactory;
 
@@ -130,6 +139,8 @@ public:
 	UFUNCTION()
 	void ReleaseWeapon();
 
+	UFUNCTION()
+	void DestoryMySession();
 
 private:
 	bool bIsDead = false;

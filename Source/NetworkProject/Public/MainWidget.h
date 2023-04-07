@@ -19,8 +19,10 @@ public:
 	class UTextBlock* Text_Health;
 	UPROPERTY(VisibleAnywhere, meta=(BindWidget))
 	class UTextBlock* Text_Ammo;
-	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, meta=(BindWidget))
 	class UTextBlock* Text_PlayerList;
+	UPROPERTY(VisibleAnywhere, meta=(BindWidget))
+	class UButton* Button_Exit;
 
 protected:
 	virtual void NativeConstruct() override;
@@ -28,4 +30,7 @@ protected:
 
 private:
 	class ANetworkProjectCharacter* Player;
+
+	UFUNCTION()
+	void ExitSession();
 };
